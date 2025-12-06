@@ -62,12 +62,11 @@
     /* Connection Panel - Floating Window */
     .connection-panel {
       position: fixed;
-      left: calc(100vw - 495px);
-      top: 70px;
-      width: 480px;
-      height: 520px;
+      right: 70px;
+      top: 15px;
+      width: 420px;
       min-width: 380px;
-      min-height: 450px;
+      max-height: calc(100vh - 30px);
       background: #16213e;
       border: 1px solid #333;
       border-radius: 10px;
@@ -76,18 +75,16 @@
       display: none;
       flex-direction: column;
       overflow: hidden;
-      resize: both;
     }
 
     .connection-panel.visible {
       display: flex;
     }
 
-    /* Panel Header - Draggable */
+    /* Panel Header */
     .panel-header {
       background: #0f0f23;
-      padding: 12px 15px;
-      cursor: move;
+      padding: 10px 15px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -96,7 +93,7 @@
     }
 
     .panel-header h2 {
-      font-size: 1rem;
+      font-size: 0.95rem;
       color: #4ecca3;
       display: flex;
       align-items: center;
@@ -107,9 +104,9 @@
       background: none;
       border: none;
       color: #666;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       cursor: pointer;
-      padding: 0 5px;
+      padding: 0 4px;
       line-height: 1;
     }
 
@@ -117,39 +114,32 @@
       color: #e74c3c;
     }
 
-    /* Panel Body */
-    .panel-body {
-      padding: 20px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
     .form-group {
-      margin-bottom: 15px;
+      margin-bottom: 12px;
     }
 
     .form-row {
       display: grid;
-      grid-template-columns: 1fr 100px;
-      gap: 15px;
+      grid-template-columns: 1fr 90px;
+      gap: 12px;
     }
 
     .form-group label {
       display: block;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: #aaa;
       font-weight: 500;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     .form-group input, .form-group textarea {
       width: 100%;
-      padding: 10px 12px;
+      padding: 9px 11px;
       border: 1px solid #333;
       border-radius: 6px;
       background: #0f0f23;
       color: #eee;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       transition: border-color 0.2s;
     }
 
@@ -160,18 +150,60 @@
 
     .form-group textarea {
       font-family: 'Consolas', 'Monaco', monospace;
-      resize: vertical;
-      min-height: 120px;
+      resize: none;
+      min-height: 60px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .form-group textarea.masked {
+      -webkit-text-security: disc;
+      -moz-text-security: disc;
+      text-security: disc;
+    }
+
+    .textarea-wrapper {
+      position: relative;
+    }
+
+    .textarea-wrapper textarea {
+      padding-right: 40px;
+    }
+
+    .toggle-visibility {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .toggle-visibility:hover {
+      color: #4ecca3;
+      background: rgba(78, 204, 163, 0.1);
+    }
+
+    .toggle-visibility svg {
+      width: 18px;
+      height: 18px;
     }
 
     .auth-tabs {
       display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
+      gap: 8px;
+      margin-bottom: 12px;
     }
 
     .auth-tab {
-      padding: 8px 16px;
+      padding: 8px 14px;
       background: #0f0f23;
       border: 1px solid #333;
       border-radius: 6px;
@@ -180,6 +212,7 @@
       transition: all 0.2s;
       flex: 1;
       text-align: center;
+      font-size: 0.9rem;
     }
 
     .auth-tab:hover {
@@ -203,14 +236,14 @@
     .buttons {
       display: flex;
       gap: 10px;
-      margin-top: 20px;
+      margin-top: 15px;
     }
 
     button {
-      padding: 12px 24px;
+      padding: 10px 20px;
       border: none;
       border-radius: 6px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -313,24 +346,66 @@
       background: rgba(231, 76, 60, 0.2);
       border: 1px solid #e74c3c;
       color: #e74c3c;
-      padding: 10px 15px;
+      padding: 8px 12px;
       border-radius: 6px;
-      margin-bottom: 15px;
-      font-size: 0.9rem;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
     }
 
-    /* Resize Handle Visual */
-    .connection-panel::after {
-      content: '';
-      position: absolute;
-      right: 3px;
-      bottom: 3px;
-      width: 12px;
-      height: 12px;
-      cursor: se-resize;
-      background: linear-gradient(135deg, transparent 50%, #4ecca3 50%);
-      border-radius: 0 0 6px 0;
+    /* Key file upload */
+    .key-input-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
+
+    .key-file-upload {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .upload-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: #0f0f23;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #aaa;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .upload-btn:hover {
+      border-color: #4ecca3;
+      color: #4ecca3;
+    }
+
+    .key-file-name {
+      font-size: 0.8rem;
+      color: #4ecca3;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Panel content layout */
+    .panel-body {
+      display: flex;
+      flex-direction: column;
+      padding: 15px 20px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .panel-content {
+      width: 100%;
+    }
+
   </style>
 </head>
 <body>
@@ -351,6 +426,7 @@
       <button class="panel-close" id="panel-close">&times;</button>
     </div>
     <div class="panel-body">
+      <div class="panel-content">
       <div id="error-container"></div>
 
       <div class="form-row">
@@ -366,7 +442,7 @@
 
       <div class="form-group">
         <label for="username">Username</label>
-        <input type="text" id="username" placeholder="root">
+        <input type="text" id="username" placeholder="root (default)">
       </div>
 
       <div class="auth-tabs">
@@ -384,7 +460,28 @@
       <div id="key-auth" class="auth-section">
         <div class="form-group">
           <label for="privateKey">Private Key (PEM format)</label>
-          <textarea id="privateKey" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;...&#10;-----END OPENSSH PRIVATE KEY-----"></textarea>
+          <div class="key-input-wrapper">
+            <div class="textarea-wrapper">
+              <textarea id="privateKey" class="masked" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;...&#10;-----END OPENSSH PRIVATE KEY-----"></textarea>
+              <button type="button" class="toggle-visibility" id="toggleKeyVisibility" title="Show key">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="eyeIcon">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+            <div class="key-file-upload">
+              <label for="keyFile" class="upload-btn">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                  <path d="M12 12l-4 4h3v4h2v-4h3l-4-4z"/>
+                </svg>
+                Upload Key File
+              </label>
+              <input type="file" id="keyFile" accept=".pem,.key,.pub,.ppk,*" style="display:none">
+              <span id="keyFileName" class="key-file-name"></span>
+            </div>
+          </div>
         </div>
         <div class="form-group">
           <label for="passphrase">Key Passphrase (optional)</label>
@@ -395,6 +492,7 @@
       <div class="buttons">
         <button class="btn-connect" id="btn-connect">Connect</button>
         <button class="btn-disconnect" id="btn-disconnect" disabled>Disconnect</button>
+      </div>
       </div>
     </div>
   </div>
@@ -416,15 +514,10 @@
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.min.js"></script>
   <script>
-    // ========== Draggable Panel ==========
+    // ========== Panel Toggle ==========
     const panel = document.getElementById('connection-panel');
-    const panelHeader = document.getElementById('panel-header');
     const toggleBtn = document.getElementById('toggle-btn');
     const closeBtn = document.getElementById('panel-close');
-
-    let isDragging = false;
-    let dragOffsetX = 0;
-    let dragOffsetY = 0;
 
     // Toggle panel visibility
     function togglePanel() {
@@ -432,39 +525,13 @@
       toggleBtn.classList.toggle('active');
       if (panel.classList.contains('visible')) {
         document.getElementById('host').focus();
+      } else {
+        terminal.focus();
       }
     }
 
     toggleBtn.addEventListener('click', togglePanel);
     closeBtn.addEventListener('click', togglePanel);
-
-    // Drag functionality
-    panelHeader.addEventListener('mousedown', (e) => {
-      if (e.target === closeBtn) return;
-      isDragging = true;
-      dragOffsetX = e.clientX - panel.offsetLeft;
-      dragOffsetY = e.clientY - panel.offsetTop;
-      panel.style.transition = 'none';
-    });
-
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      
-      let newX = e.clientX - dragOffsetX;
-      let newY = e.clientY - dragOffsetY;
-
-      // Keep panel within viewport
-      newX = Math.max(0, Math.min(newX, window.innerWidth - panel.offsetWidth));
-      newY = Math.max(0, Math.min(newY, window.innerHeight - panel.offsetHeight));
-
-      panel.style.left = newX + 'px';
-      panel.style.top = newY + 'px';
-    });
-
-    document.addEventListener('mouseup', () => {
-      isDragging = false;
-      panel.style.transition = '';
-    });
 
     // ========== Terminal Setup ==========
     const terminal = new Terminal({
@@ -519,6 +586,67 @@
       });
     });
 
+    // Key file upload handler
+    const keyFileInput = document.getElementById('keyFile');
+    const keyFileName = document.getElementById('keyFileName');
+    const privateKeyTextarea = document.getElementById('privateKey');
+    const toggleKeyVisibility = document.getElementById('toggleKeyVisibility');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    // Toggle private key visibility
+    let keyVisible = false;
+    toggleKeyVisibility.addEventListener('click', () => {
+      keyVisible = !keyVisible;
+      if (keyVisible) {
+        privateKeyTextarea.classList.remove('masked');
+        eyeIcon.innerHTML = `
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        `;
+        toggleKeyVisibility.title = 'Hide key';
+      } else {
+        privateKeyTextarea.classList.add('masked');
+        eyeIcon.innerHTML = `
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        `;
+        toggleKeyVisibility.title = 'Show key';
+      }
+    });
+
+    // Auto-resize textarea function
+    function autoResizeTextarea(textarea) {
+      textarea.style.height = 'auto';
+      const newHeight = Math.min(textarea.scrollHeight, 150);
+      textarea.style.height = newHeight + 'px';
+    }
+
+    // Listen for input/paste on private key textarea
+    privateKeyTextarea.addEventListener('input', () => {
+      autoResizeTextarea(privateKeyTextarea);
+    });
+
+    privateKeyTextarea.addEventListener('paste', () => {
+      setTimeout(() => autoResizeTextarea(privateKeyTextarea), 0);
+    });
+
+    keyFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        keyFileName.textContent = file.name;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          privateKeyTextarea.value = event.target.result;
+          autoResizeTextarea(privateKeyTextarea);
+        };
+        reader.onerror = () => {
+          showError('Failed to read key file');
+          keyFileName.textContent = '';
+        };
+        reader.readAsText(file);
+      }
+    });
+
     // Window resize handler
     window.addEventListener('resize', () => {
       fitAddon.fit();
@@ -547,13 +675,13 @@
     btnConnect.addEventListener('click', () => {
       const host = document.getElementById('host').value.trim();
       const port = parseInt(document.getElementById('port').value) || 22;
-      const username = document.getElementById('username').value.trim();
+      const username = document.getElementById('username').value.trim() || 'root';
       const password = document.getElementById('password').value;
       const privateKey = document.getElementById('privateKey').value.trim();
       const passphrase = document.getElementById('passphrase').value;
 
-      if (!host || !username) {
-        showError('Host and username are required');
+      if (!host) {
+        showError('Host is required');
         return;
       }
 
