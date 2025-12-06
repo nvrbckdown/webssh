@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>WebSSH Client</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Toggle Button */
+    .toggle-btn {
+      position: fixed;
+      right: 15px;
+      top: 15px;
+      width: 44px;
+      height: 44px;
+      background: #16213e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: all 0.3s;
+    }
+
+    .toggle-btn:hover {
+      background: #1e2a4a;
+      border-color: #4ecca3;
+    }
+
+    .toggle-btn.active {
+      background: #4ecca3;
+    }
+
+    .toggle-btn svg {
+      width: 24px;
+      height: 24px;
+      color: #4ecca3;
+      transition: color 0.3s;
+    }
+
+    .toggle-btn.active svg {
+      color: #1a1a2e;
+    }
+
+    /* Connection Panel - Floating Window */
+    .connection-panel {
+      position: fixed;
+      left: calc(100vw - 495px);
+      top: 70px;
+      width: 480px;
+      height: 520px;
+      min-width: 380px;
+      min-height: 450px;
+      background: #16213e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      resize: both;
+    }
+
+    .connection-panel.visible {
+      display: flex;
+    }
+
+    /* Panel Header - Draggable */
+    .panel-header {
+      background: #0f0f23;
+      padding: 12px 15px;
+      cursor: move;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #333;
+      user-select: none;
+    }
+
+    .panel-header h2 {
+      font-size: 1rem;
+      color: #4ecca3;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-close {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0 5px;
+      line-height: 1;
+    }
+
+    .panel-close:hover {
+      color: #e74c3c;
+    }
+
+    /* Panel Body */
+    .panel-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 100px;
+      gap: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: #aaa;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background: #0f0f23;
+      color: #eee;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #4ecca3;
+    }
+
+    .form-group textarea {
+      font-family: 'Consolas', 'Monaco', monospace;
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .auth-tab {
+      padding: 8px 16px;
+      background: #0f0f23;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #aaa;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+      text-align: center;
+    }
+
+    .auth-tab:hover {
+      border-color: #4ecca3;
+    }
+
+    .auth-tab.active {
+      background: #4ecca3;
+      color: #1a1a2e;
+      border-color: #4ecca3;
+    }
+
+    .auth-section {
+      display: none;
+    }
+
+    .auth-section.active {
+      display: block;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-connect {
+      background: #4ecca3;
+      color: #1a1a2e;
+      flex: 1;
+    }
+
+    .btn-connect:hover:not(:disabled) {
+      background: #3db892;
+    }
+
+    .btn-disconnect {
+      background: #e74c3c;
+      color: white;
+      flex: 1;
+    }
+
+    .btn-disconnect:hover:not(:disabled) {
+      background: #c0392b;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Main Terminal Area */
+    .main-container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 15px;
+      background: #16213e;
+      border-radius: 8px 8px 0 0;
+      border-bottom: 1px solid #333;
+    }
+
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #666;
+    }
+
+    .status-indicator.connected {
+      background: #4ecca3;
+      box-shadow: 0 0 8px #4ecca3;
+    }
+
+    .status-indicator.connecting {
+      background: #f39c12;
+      animation: pulse 1s infinite;
+    }
+
+    .status-indicator.error {
+      background: #e74c3c;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-text {
+      font-size: 0.85rem;
+      color: #aaa;
+      flex: 1;
+    }
+
+    .header-title {
+      font-size: 1rem;
+      color: #4ecca3;
+      font-weight: 600;
+    }
+
+    #terminal-container {
+      background: #0f0f23;
+      border-radius: 0 0 8px 8px;
+      padding: 10px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #terminal {
+      height: 100%;
+    }
+
+    .error-message {
+      background: rgba(231, 76, 60, 0.2);
+      border: 1px solid #e74c3c;
+      color: #e74c3c;
+      padding: 10px 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+    }
+
+    /* Resize Handle Visual */
+    .connection-panel::after {
+      content: '';
+      position: absolute;
+      right: 3px;
+      bottom: 3px;
+      width: 12px;
+      height: 12px;
+      cursor: se-resize;
+      background: linear-gradient(135deg, transparent 50%, #4ecca3 50%);
+      border-radius: 0 0 6px 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Toggle Button -->
+  <button class="toggle-btn" id="toggle-btn" title="Connection Settings (Ctrl+Shift+C)">
+    <svg viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="18" width="5" height="6" rx="1" fill="currentColor"/>
+      <rect x="8" y="13" width="5" height="11" rx="1" fill="currentColor"/>
+      <rect x="15" y="7" width="5" height="17" rx="1" fill="currentColor"/>
+      <rect x="22" y="1" width="5" height="23" rx="1" fill="currentColor"/>
+    </svg>
+  </button>
+
+  <!-- Floating Connection Panel -->
+  <div class="connection-panel" id="connection-panel">
+    <div class="panel-header" id="panel-header">
+      <h2>🔐 SSH Connection</h2>
+      <button class="panel-close" id="panel-close">&times;</button>
+    </div>
+    <div class="panel-body">
+      <div id="error-container"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="host">Host</label>
+          <input type="text" id="host" placeholder="192.168.1.100 or hostname">
+        </div>
+        <div class="form-group">
+          <label for="port">Port</label>
+          <input type="number" id="port" value="22" min="1" max="65535">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="root">
+      </div>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" data-auth="password">Password</div>
+        <div class="auth-tab" data-auth="key">Private Key</div>
+      </div>
+
+      <div id="password-auth" class="auth-section active">
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter password">
+        </div>
+      </div>
+
+      <div id="key-auth" class="auth-section">
+        <div class="form-group">
+          <label for="privateKey">Private Key (PEM format)</label>
+          <textarea id="privateKey" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;...&#10;-----END OPENSSH PRIVATE KEY-----"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="passphrase">Key Passphrase (optional)</label>
+          <input type="password" id="passphrase" placeholder="Enter passphrase if encrypted">
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn-connect" id="btn-connect">Connect</button>
+        <button class="btn-disconnect" id="btn-disconnect" disabled>Disconnect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Terminal -->
+  <div class="main-container">
+    <div class="status-bar">
+      <span class="header-title">WebSSH</span>
+      <div style="flex:1"></div>
+      <div class="status-indicator" id="status-indicator"></div>
+      <span class="status-text" id="status-text">Disconnected</span>
+    </div>
+    <div id="terminal-container">
+      <div id="terminal"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.min.js"></script>
+  <script>
+    // ========== Draggable Panel ==========
+    const panel = document.getElementById('connection-panel');
+    const panelHeader = document.getElementById('panel-header');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const closeBtn = document.getElementById('panel-close');
+
+    let isDragging = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    // Toggle panel visibility
+    function togglePanel() {
+      panel.classList.toggle('visible');
+      toggleBtn.classList.toggle('active');
+      if (panel.classList.contains('visible')) {
+        document.getElementById('host').focus();
+      }
+    }
+
+    toggleBtn.addEventListener('click', togglePanel);
+    closeBtn.addEventListener('click', togglePanel);
+
+    // Drag functionality
+    panelHeader.addEventListener('mousedown', (e) => {
+      if (e.target === closeBtn) return;
+      isDragging = true;
+      dragOffsetX = e.clientX - panel.offsetLeft;
+      dragOffsetY = e.clientY - panel.offsetTop;
+      panel.style.transition = 'none';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      
+      let newX = e.clientX - dragOffsetX;
+      let newY = e.clientY - dragOffsetY;
+
+      // Keep panel within viewport
+      newX = Math.max(0, Math.min(newX, window.innerWidth - panel.offsetWidth));
+      newY = Math.max(0, Math.min(newY, window.innerHeight - panel.offsetHeight));
+
+      panel.style.left = newX + 'px';
+      panel.style.top = newY + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      panel.style.transition = '';
+    });
+
+    // ========== Terminal Setup ==========
+    const terminal = new Terminal({
+      cursorBlink: true,
+      fontSize: 14,
+      fontFamily: '"Cascadia Code", "Fira Code", Consolas, Monaco, monospace',
+      theme: {
+        background: '#0f0f23',
+        foreground: '#eee',
+        cursor: '#4ecca3',
+        selection: 'rgba(78, 204, 163, 0.3)',
+        black: '#1a1a2e',
+        red: '#e74c3c',
+        green: '#4ecca3',
+        yellow: '#f39c12',
+        blue: '#3498db',
+        magenta: '#9b59b6',
+        cyan: '#1abc9c',
+        white: '#ecf0f1',
+      },
+      scrollback: 10000,
+    });
+
+    const fitAddon = new FitAddon.FitAddon();
+    const webLinksAddon = new WebLinksAddon.WebLinksAddon();
+    
+    terminal.loadAddon(fitAddon);
+    terminal.loadAddon(webLinksAddon);
+    terminal.open(document.getElementById('terminal'));
+    
+    // Fit terminal after a small delay to ensure container is sized
+    setTimeout(() => fitAddon.fit(), 100);
+
+    // ========== Elements ==========
+    const btnConnect = document.getElementById('btn-connect');
+    const btnDisconnect = document.getElementById('btn-disconnect');
+    const statusIndicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    const errorContainer = document.getElementById('error-container');
+    const authTabs = document.querySelectorAll('.auth-tab');
+
+    let ws = null;
+
+    // Auth tab switching
+    authTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        authTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        document.querySelectorAll('.auth-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(`${tab.dataset.auth}-auth`).classList.add('active');
+      });
+    });
+
+    // Window resize handler
+    window.addEventListener('resize', () => {
+      fitAddon.fit();
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'resize',
+          cols: terminal.cols,
+          rows: terminal.rows
+        }));
+      }
+    });
+
+    // Show error
+    function showError(message) {
+      errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
+      setTimeout(() => errorContainer.innerHTML = '', 5000);
+    }
+
+    // Update status
+    function setStatus(status, text) {
+      statusIndicator.className = 'status-indicator ' + status;
+      statusText.textContent = text;
+    }
+
+    // Connect
+    btnConnect.addEventListener('click', () => {
+      const host = document.getElementById('host').value.trim();
+      const port = parseInt(document.getElementById('port').value) || 22;
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const privateKey = document.getElementById('privateKey').value.trim();
+      const passphrase = document.getElementById('passphrase').value;
+
+      if (!host || !username) {
+        showError('Host and username are required');
+        return;
+      }
+
+      if (!password && !privateKey) {
+        showError('Password or private key is required');
+        return;
+      }
+
+      terminal.clear();
+      terminal.write('\x1b[33mConnecting to ' + host + '...\x1b[0m\r\n');
+      setStatus('connecting', 'Connecting...');
+      btnConnect.disabled = true;
+
+      // Determine WebSocket protocol
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${wsProtocol}//${window.location.host}`);
+
+      ws.onopen = () => {
+        const connectMsg = {
+          type: 'connect',
+          host,
+          port,
+          username,
+          cols: terminal.cols,
+          rows: terminal.rows
+        };
+
+        if (privateKey) {
+          connectMsg.privateKey = privateKey;
+          if (passphrase) connectMsg.passphrase = passphrase;
+        } else {
+          connectMsg.password = password;
+        }
+
+        ws.send(JSON.stringify(connectMsg));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+
+          switch (msg.type) {
+            case 'data':
+              terminal.write(msg.data);
+              break;
+            case 'status':
+              if (msg.data === 'connected') {
+                setStatus('connected', `Connected: ${username}@${host}`);
+                btnDisconnect.disabled = false;
+                // Auto-hide panel on successful connection
+                if (panel.classList.contains('visible')) {
+                  togglePanel();
+                }
+              } else if (msg.data === 'disconnected') {
+                setStatus('', 'Disconnected');
+                btnConnect.disabled = false;
+                btnDisconnect.disabled = true;
+              }
+              break;
+            case 'error':
+              terminal.write(`\x1b[31m${msg.data}\x1b[0m\r\n`);
+              setStatus('error', 'Error');
+              showError(msg.data);
+              btnConnect.disabled = false;
+              break;
+          }
+        } catch (e) {
+          console.error('Message parse error:', e);
+        }
+      };
+
+      ws.onclose = () => {
+        setStatus('', 'Disconnected');
+        btnConnect.disabled = false;
+        btnDisconnect.disabled = true;
+        terminal.write('\r\n\x1b[33mConnection closed\x1b[0m\r\n');
+      };
+
+      ws.onerror = (err) => {
+        setStatus('error', 'Connection error');
+        showError('WebSocket connection failed');
+        btnConnect.disabled = false;
+      };
+    });
+
+    // Disconnect
+    btnDisconnect.addEventListener('click', () => {
+      if (ws) {
+        ws.send(JSON.stringify({ type: 'disconnect' }));
+        ws.close();
+      }
+    });
+
+    // Terminal input
+    terminal.onData((data) => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'data', data }));
+      }
+    });
+
+    // Initial message
+    terminal.write('WebSSH Client Ready\r\n');
+    terminal.write('Click the signal icon in the top-right corner to connect\r\n');
+    terminal.write('Or press Ctrl+Shift+C\r\n\r\n');
+
+    // Keyboard shortcut to toggle panel (Ctrl+Shift+C)
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+        e.preventDefault();
+        togglePanel();
+      }
+      // Escape to close panel
+      if (e.key === 'Escape' && panel.classList.contains('visible')) {
+        togglePanel();
+      }
+    });
+
+    // Connect on Enter in form fields
+    ['host', 'username', 'password', 'passphrase'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !btnConnect.disabled) {
+          btnConnect.click();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
